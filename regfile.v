@@ -70,8 +70,8 @@ module regfile(
 	  end else if(raddr1 == `RegNumLog2'h0) begin
 	  		rdata1 <= `ZeroWord;//读0寄存器的操作
 	  end else if((raddr1 == waddr) && (we == `WriteEnable) 
-	  	            && (re1 == `ReadEnable)) begin //要读的寄存器是要写的寄存器的值 直接取出来了 
-	  	  rdata1 <= wdata;
+	  	            && (re1 == `ReadEnable)) begin //要读的寄存器是要写的寄存器的值 直接取出来了 当然写的时候照旧写 用于写在读之前的 相隔两行代码的情况
+	  	  rdata1 <= wdata;//如果要读取的寄存器是在下一个时钟上升沿要写入的寄存器 那么就将要写入的数据直接作为结果输出。p110 5，1
 	  end else if(re1 == `ReadEnable) begin //如果没有rst 和0寄存器 还有什么写寄存器同地址的操作 读相应的寄存器
 	      rdata1 <= regs[raddr1];
 	  end else begin//如果不让读 没有读使能信号 回个0

@@ -37,8 +37,6 @@ module if_id(
 	input wire										clk,//时钟信号
 	input wire										rst,//复位信号
 
-	//来自控制模块的信息
-	input wire[5:0]               stall,	
 
 	input wire[`InstAddrBus]	  if_pc,//InstAddrBus ROm的地址线宽度 32 instruction fecture 取指阶段指令对应的地址
 	input wire[`InstBus]          if_inst,//Rom的地址线宽度 32 取值阶段取得的指令
@@ -51,10 +49,8 @@ module if_id(
 		if (rst == `RstEnable) begin //再时钟上升沿如果是复位 就送空指令 
 			id_pc <= `ZeroWord;
 			id_inst <= `ZeroWord;
-		end else if(stall[1] == `Stop && stall[2] == `NoStop) begin
-			id_pc <= `ZeroWord;//或者流水线的暂停
-			id_inst <= `ZeroWord;	
-	  end else if(stall[1] == `NoStop) begin
+		end else 
+		begin
 		  id_pc <= if_pc;
 		  id_inst <= if_inst;
 		end

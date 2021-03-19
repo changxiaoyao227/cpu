@@ -40,20 +40,29 @@ module id(
 	input wire[`InstBus]          					inst_i,//指令的值
 
 	//处于执行阶段的指令要写入的目的寄存器信息
-	input wire										ex_wreg_i,//
-	input wire[`RegBus]								ex_wdata_i,
-	input wire[`RegAddrBus]       					ex_wd_i,
+	//解决0，1行数据冲突 数据前推 将计算结果从其产生出直接送到其他指令需要处或者所有需要的功能单元处，避免流水线暂停
+	//  取值 译码 执行 访存 回写
+	//       取值 译码 执行 访存 回写
+	//            取值 译码 执行 访存 回写   这里展示0-1行代码 产生结果送到译码 一个是执行阶段  一个是访存阶段 p113 5.1
+	input wire										ex_wreg_i,//处于执行阶段的指令是否要写目的寄存器
+	input wire[`RegBus]								ex_wdata_i,//指令要写的目的寄存器地址
+	input wire[`RegAddrBus]       					ex_wd_i,//只要要写入目的寄存器的数据
 	
 	//处于访存阶段的指令要写入的目的寄存器信息
-	input wire										mem_wreg_i,
-	input wire[`RegBus]								mem_wdata_i,
-	input wire[`RegAddrBus]       					mem_wd_i,
-	
+	input wire										mem_wreg_i,//处于访存阶段的指令是否要写入目的寄存器
+	input wire[`RegBus]								mem_wdata_i,//寄存器地址
+	input wire[`RegAddrBus]       					mem_wd_i,//寄存器的数据
+	//给reg1_o赋值的过程中增加了两种情况
+	//1.如果regfile模块读端口1要读取的寄存器就是执行阶段要写的目的寄存器
+	//	那么直接把ex_wdata_i作为reg1_o的值
+	//2.如果regfile模块读端口1要读取的寄存器就是访存阶段要写的目的寄存器
+	//	那么直接把访存的结果mem_wdata_i作为reg1_o的值
+	//p113 5.1
 	input wire[`RegBus]           					reg1_data_i,//读取的regfile的值
 	input wire[`RegBus]           					reg2_data_i,
 
 	//如果上一条指令是转移指令，那么下一条指令在译码的时候is_in_delayslot为true
-	input wire                    is_in_delayslot_i,
+	input wire                    is_in_delayslot_i,//当前执行的指令是否在延迟槽里面
 
 	//送到regfile的信息
 	output reg                    reg1_read_o,//regfile模块的第一个读寄存器的  使能信号
@@ -69,14 +78,14 @@ module id(
 	output reg[`RegAddrBus]       wd_o,//译码阶段要写入的目的寄存器地址 4：0
 	output reg                    wreg_o,//译码阶段是否有要写入的目的寄存器
 
-	output reg                    next_inst_in_delayslot_o,
+	output reg                    next_inst_in_delayslot_o,//下一条进入译码阶段的指令是否位于延迟槽
 	
-	output reg                    branch_flag_o,
-	output reg[`RegBus]           branch_target_address_o,       
-	output reg[`RegBus]           link_addr_o,
-	output reg                    is_in_delayslot_o,
+	output reg                    branch_flag_o,//是否发生转移
+	output reg[`RegBus]           branch_target_address_o,    //转移到的目标地址   
+	output reg[`RegBus]           link_addr_o,//转移指令要保存的返回地址
+	output reg                    is_in_delayslot_o,//当前处于译码阶段的指令是否是延迟槽 延迟槽见第八章 200页左右
 	
-	output wire                   stallreq	
+
 );
 //取得指令的指令码，功能码，
 
@@ -90,11 +99,10 @@ module id(
   wire[`RegBus] pc_plus_4;
   wire[`RegBus] imm_sll2_signedext;  
   
-  assign pc_plus_8 = pc_i + 8;
-  assign pc_plus_4 = pc_i +4;
+  assign pc_plus_8 = pc_i + 8;	//保存当前译码阶段指令后面第2条指令的地址
+  assign pc_plus_4 = pc_i +4;	//保存当前译码阶段指令后面第1条指令的地址
   assign imm_sll2_signedext = {{14{inst_i[15]}}, inst_i[15:0], 2'b00 };  
-  assign stallreq = `NoStop;
-  // 
+  // imm对应分直指令中的offset左移两位，再符号拓展至32的值
 	always @ (*) begin	
 		if (rst == `RstEnable) begin
 			aluop_o <= `EXE_NOP_OP;//空指令 6个0
@@ -240,6 +248,7 @@ module id(
 				instvalid <= `InstValid;	
 				end	 		
 		  	`EXE_LUI://001111 这里转换为了OR操作	lui $1,10 $1=10*65536 rt=imm<<16&0FFFF0000H
+			  		//=ori rt,$0,immediate||0^16
 				begin
 		  		wreg_o <= `WriteEnable;		aluop_o <= `EXE_OR_OP;
 		  		alusel_o <= `EXE_RES_LOGIC; reg1_read_o <= 1'b1;	reg2_read_o <= 1'b0;	  	
@@ -345,7 +354,11 @@ module id(
 		end       //if
 	end         //always
 	
-//下面的要看pdf了
+//	//给reg1_o赋值的过程中增加了两种情况
+	//1.如果regfile模块读端口1要读取的寄存器就是执行阶段要写的目的寄存器
+	//	那么直接把ex_wdata_i作为reg1_o的值
+	//2.如果regfile模块读端口1要读取的寄存器就是访存阶段要写的目的寄存器
+	//	那么直接把访存的结果mem_wdata_i作为reg1_o的值
 	always @ (*) begin
 		if(rst == `RstEnable) begin
 			reg1_o <= `ZeroWord;		
@@ -361,7 +374,11 @@ module id(
 	    reg1_o <= `ZeroWord;
 	  end
 	end
-	
+	//给reg1_o赋值的过程中增加了两种情况
+	//1.如果regfile模块读端口1要读取的寄存器就是执行阶段要写的目的寄存器
+	//	那么直接把ex_wdata_i作为reg1_o的值
+	//2.如果regfile模块读端口1要读取的寄存器就是访存阶段要写的目的寄存器
+	//	那么直接把访存的结果mem_wdata_i作为reg1_o的值
 	always @ (*) begin
 		if(rst == `RstEnable) begin
 			reg2_o <= `ZeroWord;

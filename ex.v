@@ -44,84 +44,45 @@ module ex(
 	input wire[`RegAddrBus]       wd_i,//写入的寄存器地址
 	input wire                    wreg_i,//写使能 有没有
 
-	//HI、LO寄存器的值
-	input wire[`RegBus]           hi_i,//等会肯定删了你
-	input wire[`RegBus]           lo_i,
-
-	//回写阶段的指令是否要写HI、LO，用于检测HI、LO的数据相关
-	input wire[`RegBus]           wb_hi_i,//一样删了你
-	input wire[`RegBus]           wb_lo_i,
-	input wire                    wb_whilo_i,
-	
-	//访存阶段的指令是否要写HI、LO，用于检测HI、LO的数据相关
-	input wire[`RegBus]           mem_hi_i,//继续删了你
-	input wire[`RegBus]           mem_lo_i,
-	input wire                    mem_whilo_i,
-
-	input wire[`DoubleRegBus]     hilo_temp_i,
-	input wire[1:0]               cnt_i,
-
-	//与除法模块相连
-	input wire[`DoubleRegBus]     div_result_i,//绝对删了你
-	input wire                    div_ready_i,
 
 	//是否转移、以及link address
-	input wire[`RegBus]           link_address_i,//这个应该不用删
-	input wire                    is_in_delayslot_i,	
+	input wire[`RegBus]           link_address_i,//处于执行阶段的转移指令要保存的返回地址
+	input wire                    is_in_delayslot_i,//当前处于执行阶段的指令是否位于延迟槽
 	//执行的结果
 	output reg[`RegAddrBus]       wd_o,
 	output reg                    wreg_o,
-	output reg[`RegBus]						wdata_o,
-
-	output reg[`RegBus]           hi_o,
-	output reg[`RegBus]           lo_o,
-	output reg                    whilo_o,
-	
-	output reg[`DoubleRegBus]     hilo_temp_o,
-	output reg[1:0]               cnt_o,
-
-	output reg[`RegBus]           div_opdata1_o,
-	output reg[`RegBus]           div_opdata2_o,
-	output reg                    div_start_o,
-	output reg                    signed_div_o,
-
-	output reg					  stallreq       			
+	output reg[`RegBus]			  wdata_o,
+		
 	
 );
 
 	reg[`RegBus] logicout;//保存逻辑运算的结果
-	reg[`RegBus] shiftres;
-	reg[`RegBus] moveres;
-	reg[`RegBus] arithmeticres;
-	reg[`DoubleRegBus] mulres;	
-	reg[`RegBus] HI;
-	reg[`RegBus] LO;
-	wire[`RegBus] reg2_i_mux;
-	wire[`RegBus] reg1_i_not;	
-	wire[`RegBus] result_sum;
-	wire ov_sum;
-	wire reg1_eq_reg2;
-	wire reg1_lt_reg2;
-	wire[`DoubleRegBus] hilo_temp;
-	reg[`DoubleRegBus] hilo_temp1;
-	reg stallreq_for_madd_msub;			
-	reg stallreq_for_div;
+	reg[`RegBus] shiftres;//移位操作的结果
+	reg[`RegBus] arithmeticres;//保存算术运算的结果
+	wire[`RegBus] reg2_i_mux;//保存输入的第二个操作数reg2_i的补码 
+	 //如果是减法或者有符号比较运算，那么reg2_i_mux等于第二个操作数reg2_i的补码，否则就等于第二个操作数
+	wire[`RegBus] reg1_i_not;	//保存输入的第一个操作数reg1_i取反后的值
+	wire[`RegBus] result_sum;	//保存加法结果
+	wire ov_sum;//保存溢出的情况
+	wire reg1_eq_reg2;//第一个操作数是否等于第二个操作数
+	wire reg1_lt_reg2;//第一个操作数是否小于第二个操作数
+
 			
 	always @ (*) begin
 		if(rst == `RstEnable) begin
 			logicout <= `ZeroWord;
 		end else begin
 			case (aluop_i)//哪种运算
-				`EXE_OR_OP:			begin
+				`EXE_OR_OP:			begin//或
 					logicout <= reg1_i | reg2_i;
 				end
-				`EXE_AND_OP:		begin
+				`EXE_AND_OP:		begin//与
 					logicout <= reg1_i & reg2_i;
 				end
-				`EXE_NOR_OP:		begin
+				`EXE_NOR_OP:		begin//或非
 					logicout <= ~(reg1_i |reg2_i);
 				end
-				`EXE_XOR_OP:		begin
+				`EXE_XOR_OP:		begin//异或
 					logicout <= reg1_i ^ reg2_i;
 				end
 				default:			begin
@@ -139,10 +100,10 @@ module ex(
 				`EXE_SLL_OP:			begin //逻辑左移
 					shiftres <= reg2_i << reg1_i[4:0] ;
 				end
-				`EXE_SRL_OP:		begin
+				`EXE_SRL_OP:		begin	//逻辑右移
 					shiftres <= reg2_i >> reg1_i[4:0];
 				end
-				`EXE_SRA_OP:		begin
+				`EXE_SRA_OP:		begin	//算术右移 可能要思量一下这里的操作
 					shiftres <= ({32{reg2_i[31]}} << (6'd32-{1'b0, reg1_i[4:0]})) | reg2_i >> reg1_i[4:0];
 				end
 				default:				begin
@@ -153,31 +114,49 @@ module ex(
 	end      //always
 
 	assign reg2_i_mux = ((aluop_i == `EXE_SUB_OP) || (aluop_i == `EXE_SUBU_OP) ||(aluop_i == `EXE_SLT_OP) ) 
-	? (~reg2_i)+1 : reg2_i;
+	? (~reg2_i)+1 : reg2_i;  //如果是减法或者有符号比较运算，那么reg2_i_mux等于第二个操作数reg2_i的补码，否则就等于第二个操作数
 
 	assign result_sum = reg1_i + reg2_i_mux;		//reg1_i参与运行的源操作数								 
+	//分三种情况
+	//A 如果是加法运算，此时reg2_i_mux就是第二个操作数reg2_i
+	//	所以此时result_sum就是加法运算的结果
+	//B 如果是减法运算，此时reg2_i_mux就是第二个操作数reg2_i的补码
+	//	所以是减法运算的结果
+	//C	如果是有符号比较运算，此时reg2_i_mux也是第二个操作数reg2_i的补码，所以result是减法运算的结果，
+	//	可以通过判断减法的结果是否小于零，进而判断第一个操作数是否小于第二个操作数
 
 	assign ov_sum = ((!reg1_i[31] && !reg2_i_mux[31]) && result_sum[31]) ||
 	((reg1_i[31] && reg2_i_mux[31]) && (!result_sum[31]));  
-									
+	//计算是否溢出，加法指令（add和addi）。减法指令（sub）执行的时候
+	// 需要判断是否溢出，满足以下两种情况之一时，有溢出
+	// A reg1_i为正数，reg2_i_mux时正数，但两者之和为负数
+	// B reg1_i为负数，reg2_i_mus是负数，但两者之和为正数
+
 	assign reg1_lt_reg2 = ((aluop_i == `EXE_SLT_OP)) ?
 	((reg1_i[31] && !reg2_i[31]) || (!reg1_i[31] && !reg2_i[31] && result_sum[31])||(reg1_i[31] && reg2_i[31] && result_sum[31]))
 	:(reg1_i < reg2_i);
-  
+	//计算操作数1是否小于操作数2，分两种情况：
+	//	A.aluop_i为EXE_SLT_OP表示有符号比较运算，此时又分三种情况
+	//		1.reg1_i为负数，reg2_i为正数，显然reg1_i小于reg2_i
+	//		2.reg1_i为正数，reg2_i为正数，并且reg1_i减去reg2_i的值小于0
+	//		此时也有reg1_i小于reg2_i	
+	//		3.reg1_i为负数，reg2_i为负数，并且reg1_i减去reg2_i的值小于0
+	//		此时也有reg1_i小于reg2_i
+	//	B.无符号数比较的时候 直接使用比较运算符 
   assign reg1_i_not = ~reg1_i;
-							
+	// 对操作数1逐位取反，赋给reg1_i_not /保存输入的第一个操作数reg1_i取反后的值
 	always @ (*) begin
 		if(rst == `RstEnable) begin
 			arithmeticres <= `ZeroWord;
 		end else begin
 			case (aluop_i)
-				`EXE_SLT_OP, `EXE_SLTU_OP:		begin
+				`EXE_SLT_OP, `EXE_SLTU_OP:		begin	//比较运算
 					arithmeticres <= reg1_lt_reg2 ;
 				end
-				`EXE_ADD_OP, `EXE_ADDU_OP, `EXE_ADDI_OP, `EXE_ADDIU_OP:		begin
+				`EXE_ADD_OP, `EXE_ADDU_OP, `EXE_ADDI_OP, `EXE_ADDIU_OP:		begin	//加法运算
 					arithmeticres <= result_sum; 
 				end
-				`EXE_SUB_OP, `EXE_SUBU_OP:		begin
+				`EXE_SUB_OP, `EXE_SUBU_OP:		begin//减法运算
 					arithmeticres <= result_sum; 
 				end		
 				default:				begin
@@ -188,50 +167,28 @@ module ex(
 	end
 
 
-  //得到最新的HI、LO寄存器的值，此处要解决指令数据相关问题
-	always @ (*) begin
-		if(rst == `RstEnable) begin
-			{HI,LO} <= {`ZeroWord,`ZeroWord};
-		end else if(mem_whilo_i == `WriteEnable) begin
-			{HI,LO} <= {mem_hi_i,mem_lo_i};
-		end else if(wb_whilo_i == `WriteEnable) begin
-			{HI,LO} <= {wb_hi_i,wb_lo_i};
-		end else begin
-			{HI,LO} <= {hi_i,lo_i};			
-		end
-	end	
-
-  always @ (*) begin
-    stallreq = stallreq_for_madd_msub || stallreq_for_div;
-  end
 
 
- always @ (*) begin
-	 wd_o <= wd_i;
-	 	 	 	
-	 if(((aluop_i == `EXE_ADD_OP) || (aluop_i == `EXE_ADDI_OP) || 
-	      (aluop_i == `EXE_SUB_OP)) && (ov_sum == 1'b1)) begin
-	 	wreg_o <= `WriteDisable;
-	 end else begin
-	  wreg_o <= wreg_i;
-	 end
+//这里涉及到溢出，老师说好像不用考虑溢出的情况
+//  always @ (*) begin
+// 	 wd_o <= wd_i;
+// 	 if(((aluop_i == `EXE_ADD_OP) || (aluop_i == `EXE_ADDI_OP) || 
+// 	      (aluop_i == `EXE_SUB_OP)) && (ov_sum == 1'b1)) begin
+// 	 	wreg_o <= `WriteDisable;
+// 	 end else begin
+// 	  wreg_o <= wreg_i;
+// 	 end
 	 
 	 case ( alusel_i ) 
-	 	`EXE_RES_LOGIC:		begin
+	 	`EXE_RES_LOGIC:		begin//逻辑运算
 	 		wdata_o <= logicout;
 	 	end
-	 	`EXE_RES_SHIFT:		begin
+	 	`EXE_RES_SHIFT:		begin//移位运算
 	 		wdata_o <= shiftres;
-	 	end	 	
-	 	`EXE_RES_MOVE:		begin
-	 		wdata_o <= moveres;
 	 	end	 	
 	 	`EXE_RES_ARITHMETIC:	begin
 	 		wdata_o <= arithmeticres;
 	 	end
-	 	`EXE_RES_MUL:		begin
-	 		wdata_o <= mulres[31:0];
-	 	end	 	
 	 	`EXE_RES_JUMP_BRANCH:	begin
 	 		wdata_o <= link_address_i;
 	 	end	 	

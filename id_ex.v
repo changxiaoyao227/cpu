@@ -37,8 +37,6 @@ module id_ex(
 	input wire										clk,//时钟信号
 	input wire										rst,//复位信号
 
-	//来自控制模块的信息
-	input wire[5:0]							 		stall,//
 	
 	//从译码阶段传递的信息
 	input wire[`AluOpBus]         id_aluop,//译码阶段指令要进行的运算 细的

@@ -67,7 +67,7 @@
 
 `define EXE_SPECIAL_INST 6'b000000
 `define EXE_REGIMM_INST 6'b000001
-`define EXE_SPECIAL2_INST 6'b011100
+
 
 //AluOp 逻辑
 `define EXE_AND_OP   8'b00100100
@@ -108,7 +108,7 @@
 //AluSel
 `define EXE_RES_LOGIC 3'b001
 `define EXE_RES_SHIFT 3'b010
-`define EXE_RES_MOVE 3'b011	
+
 `define EXE_RES_ARITHMETIC 3'b100	
 
 `define EXE_RES_JUMP_BRANCH 3'b110
@@ -127,18 +127,8 @@
 `define RegAddrBus 4:0          //regfile模块的地址线宽度
 `define RegBus 31:0             //regfile模块的数据线宽度
 `define RegWidth 32             //通用寄存器的宽度
-`define DoubleRegWidth 64       //两倍通用寄存器的宽度
-`define DoubleRegBus 63:0       //两倍的通用寄存器的数据线宽度
+
 `define RegNum 32               //通用寄存器的数量
 `define RegNumLog2 5            //寻址通用寄存器使用的地址位数
 `define NOPRegAddr 5'b00000     //
 
-//除法div
-`define DivFree 2'b00
-`define DivByZero 2'b01
-`define DivOn 2'b10
-`define DivEnd 2'b11
-`define DivResultReady 1'b1
-`define DivResultNotReady 1'b0
-`define DivStart 1'b1
-`define DivStop 1'b0

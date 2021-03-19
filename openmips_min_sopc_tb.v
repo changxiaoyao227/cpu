@@ -26,7 +26,7 @@
 // File:    openmips_min_sopc_tb.v
 // Author:  Lei Silei
 // E-mail:  leishangwen@163.com
-// Description: openmips_min_sopcµÄtestbench
+// Description: openmips_min_sopcçš„testbench
 // Revision: 1.0
 //////////////////////////////////////////////////////////////////////
 
