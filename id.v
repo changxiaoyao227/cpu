@@ -296,7 +296,28 @@ module id(
 			    	branch_flag_o <= `Branch;
 			    	next_inst_in_delayslot_o <= `InDelaySlot;		  	
 			    	end
-				end																			  	
+				end	
+			`EXE_J:			//J型指令
+				begin		//J 10000 PC<-= 1000<<2
+		  		wreg_o <= `WriteDisable;		aluop_o <= `EXE_J_OP;
+		  		alusel_o <= `EXE_RES_JUMP_BRANCH; reg1_read_o <= 1'b0;	reg2_read_o <= 1'b0; //rs rt 都不读了
+		  		link_addr_o <= `ZeroWord;
+			    branch_target_address_o <= {pc_plus_4[31:28], inst_i[25:0], 2'b00};
+			    branch_flag_o <= `Branch;
+			    next_inst_in_delayslot_o <= `InDelaySlot;		  	
+			    instvalid <= `InstValid;	
+				end
+			`EXE_JAL:			
+				begin		//JAL 10000 $31=pc+4 PC=10000<<2
+		  		wreg_o <= `WriteEnable;		aluop_o <= `EXE_JAL_OP;
+		  		alusel_o <= `EXE_RES_JUMP_BRANCH; reg1_read_o <= 1'b0;	reg2_read_o <= 1'b0;
+		  		wd_o <= 5'b11111;	
+		  		link_addr_o <= pc_plus_8 ;
+			    branch_target_address_o <= {pc_plus_4[31:28], inst_i[25:0], 2'b00};
+			    branch_flag_o <= `Branch;
+			    next_inst_in_delayslot_o <= `InDelaySlot;		  	
+			    instvalid <= `InstValid;	
+				end																		  	
 		    default:			begin
 		    					end
 			endcase		  //case op
