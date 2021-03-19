@@ -22,46 +22,58 @@
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-// Module:  mem_wb
-// File:    mem_wb.v
+// Module:  id_ex
+// File:    id_ex.v
 // Author:  Lei Silei
 // E-mail:  leishangwen@163.com
-// Description: MEM/WB阶段的寄存器
+// Description: ID/EX阶段的寄存器
 // Revision: 1.0
 //////////////////////////////////////////////////////////////////////
 
 `include "defines.v"
 
-module mem_wb(
+module id_ex(
 
-	input wire				 						clk,
-	input wire										rst,
+	input wire										clk,//时钟信号
+	input wire										rst,//复位信号
 
-
-	//来自访存阶段的信息	
-	input wire[`RegAddrBus]       mem_wd,
-	input wire                    mem_wreg,
-	input wire[`RegBus]			  mem_wdata,
-
-	//送到回写阶段的信息
-	output reg[`RegAddrBus]      wb_wd,
-	output reg                   wb_wreg,
-	output reg[`RegBus]			 wb_wdata       
+	
+	//从译码阶段传递的信息
+	input wire[`AluOpBus]         id_aluop,//译码阶段指令要进行的运算 细的
+	input wire[`AluSelBus]        id_alusel,//译码阶段指令要进行的运算的子类型 大致分类的
+	input wire[`RegBus]           id_reg1,//要进行运算的源操作数1
+	input wire[`RegBus]           id_reg2,//要进行运算的源操作数2
+	input wire[`RegAddrBus]       id_wd,//要写入的目的寄存器地址
+	input wire                    id_wreg,//写使能
+	input wire[`RegBus]           id_link_address,
+	input wire                    id_is_in_delayslot,
+	input wire                    next_inst_in_delayslot_i,		
+	
+	//传递到执行阶段的信息
+	output reg[`AluOpBus]         ex_aluop,//对应的内容
+	output reg[`AluSelBus]        ex_alusel,
+	output reg[`RegBus]           ex_reg1,
+	output reg[`RegBus]           ex_reg2,
+	output reg[`RegAddrBus]       ex_wd,
+	output reg                    ex_wreg,
+	output reg[`RegBus]           ex_link_address,
+  	output reg                    ex_is_in_delayslot,
+	output reg                    is_in_delayslot_o	
 	
 );
 
-
 	always @ (posedge clk) begin
-		if(rst == `RstEnable) begin
-			wb_wd <= `NOPRegAddr;
-			wb_wreg <= `WriteDisable;
-		  	wb_wdata <= `ZeroWord;	
-		end else begin
-			wb_wd <= mem_wd;
-			wb_wreg <= mem_wreg;
-			wb_wdata <= mem_wdata;	
-		end    //if
-	end      //always
-			
-
+		if (rst == `RstEnable) begin
+			ex_aluop <= `EXE_NOP_OP;
+			ex_alusel <= `EXE_RES_NOP;
+			ex_reg1 <= `ZeroWord;
+			ex_reg2 <= `ZeroWord;
+			ex_wd <= `NOPRegAddr;
+			ex_wreg <= `WriteDisable;
+			ex_link_address <= `ZeroWord;
+			ex_is_in_delayslot <= `NotInDelaySlot;
+	    	is_in_delayslot_o <= `NotInDelaySlot;			
+		end 
+	end
+	
 endmodule

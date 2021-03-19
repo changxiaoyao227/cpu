@@ -73,16 +73,7 @@ module id_ex(
 			ex_link_address <= `ZeroWord;
 			ex_is_in_delayslot <= `NotInDelaySlot;
 	    	is_in_delayslot_o <= `NotInDelaySlot;			
-		end else if(stall[2] == `Stop && stall[3] == `NoStop) begin
-			ex_aluop <= `EXE_NOP_OP;
-			ex_alusel <= `EXE_RES_NOP;
-			ex_reg1 <= `ZeroWord;
-			ex_reg2 <= `ZeroWord;
-			ex_wd <= `NOPRegAddr;
-			ex_wreg <= `WriteDisable;	
-			ex_link_address <= `ZeroWord;
-	    	ex_is_in_delayslot <= `NotInDelaySlot;			
-		end else if(stall[2] == `NoStop) begin		
+		end else begin		
 			ex_aluop <= id_aluop;
 			ex_alusel <= id_alusel;
 			ex_reg1 <= id_reg1;

@@ -51,7 +51,7 @@ module ex(
 	//执行的结果
 	output reg[`RegAddrBus]       wd_o,
 	output reg                    wreg_o,
-	output reg[`RegBus]			  wdata_o
+	output reg[`RegBus]			  wdata_o,
 		
 	
 );
@@ -178,25 +178,25 @@ module ex(
 // 	 end else begin
 // 	  wreg_o <= wreg_i;
 // 	 end
-	always@(*) begin
-	 case (alusel_i) 
-	 	`EXE_RES_LOGIC:		//逻辑运算
+	 
+	 case ( alusel_i ) 
+	 	`EXE_RES_LOGIC:		begin//逻辑运算
 	 		wdata_o <= logicout;
-	 	
-	 	`EXE_RES_SHIFT:		//移位运算
+	 	end
+	 	`EXE_RES_SHIFT:		begin//移位运算
 	 		wdata_o <= shiftres;
-	 	
-	 	`EXE_RES_ARITHMETIC:	
+	 	end	 	
+	 	`EXE_RES_ARITHMETIC:	begin
 	 		wdata_o <= arithmeticres;
-	 	
-	 	`EXE_RES_JUMP_BRANCH:	
+	 	end
+	 	`EXE_RES_JUMP_BRANCH:	begin
 	 		wdata_o <= link_address_i;
-	 		 	
-	 	default:				
-	 		wdata_o = `ZeroWord;
-	 	
+	 	end	 	
+	 	default:					begin
+	 		wdata_o <= `ZeroWord;
+	 	end
 	 endcase
-	end
+ end	
 
 
 endmodule

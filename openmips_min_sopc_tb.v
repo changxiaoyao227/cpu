@@ -39,20 +39,24 @@ module openmips_min_sopc_tb();
   reg     rst;
   
        
-  initial begin
+initial begin
     CLOCK_50 = 1'b0;
     forever #10 CLOCK_50 = ~CLOCK_50;
-  end
+end
       
-  initial begin
+initial begin
     rst = `RstEnable;
     #195 rst= `RstDisable;
-    #4100 $stop;
-  end
+    #4100 $finish;
+end
        
-  openmips_min_sopc openmips_min_sopc0(
+openmips_min_sopc openmips_min_sopc0(
 		.clk(CLOCK_50),
 		.rst(rst)	
-	);
-
+);
+ initial 
+    begin            
+        $dumpfile("openmips_test.vcd");        //指定VCD文件的名字为counter_tb.vcd，仿真信息将记录到此文件
+        $dumpvars(0, openmips_test);    //指定层次数为0，则counter_tb模块及其下面各层次的所有信号将被记录
+    end 
 endmodule

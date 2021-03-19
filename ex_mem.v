@@ -46,7 +46,7 @@ module ex_mem(
 	//送到访存阶段的信息
 	output reg[`RegAddrBus]      mem_wd,//同上
 	output reg                   mem_wreg,
-	output reg[`RegBus]			 mem_wdata,
+	output reg[`RegBus]			 mem_wdata
 
 	
 	
@@ -59,8 +59,6 @@ module ex_mem(
 			mem_wreg <= `WriteDisable;
 		    mem_wdata <= `ZeroWord;	
 	
-	    	hilo_o <= {`ZeroWord, `ZeroWord};
-			cnt_o <= 2'b00;	
 		end else begin
 	    	mem_wd <= ex_wd;
 			mem_wreg <= ex_wreg;

@@ -83,7 +83,7 @@ module id(
 	output reg                    branch_flag_o,//是否发生转移
 	output reg[`RegBus]           branch_target_address_o,    //转移到的目标地址   
 	output reg[`RegBus]           link_addr_o,//转移指令要保存的返回地址
-	output reg                    is_in_delayslot_o//当前处于译码阶段的指令是否是延迟槽 延迟槽见第八章 200页左右
+	output reg                    is_in_delayslot_o,//当前处于译码阶段的指令是否是延迟槽 延迟槽见第八章 200页左右
 	
 
 );

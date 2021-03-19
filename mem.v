@@ -43,7 +43,7 @@ module mem(
 	//送到回写阶段的信息
 	output reg[`RegAddrBus]      wd_o,//最终要写入的目的寄存器地址
 	output reg                   wreg_o,//最终
-	output reg[`RegBus]			 wdata_o,//最终
+	output reg[`RegBus]			 wdata_o//最终
 );
 
 	

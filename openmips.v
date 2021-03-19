@@ -175,7 +175,7 @@ module openmips(
 		.branch_target_address_o(branch_target_address),       
 		.link_addr_o(id_link_address_o),
 		
-		.is_in_delayslot_o(id_is_in_delayslot_o),
+		.is_in_delayslot_o(id_is_in_delayslot_o)
 		
 
 	);
@@ -242,7 +242,7 @@ module openmips(
 	  //EX模块的输出到EX/MEM模块信息
 		.wd_o(ex_wd_o),
 		.wreg_o(ex_wreg_o),
-		.wdata_o(ex_wdata_o),	
+		.wdata_o(ex_wdata_o)	
 	);
 
   //EX/MEM模块
@@ -261,7 +261,7 @@ module openmips(
 		//送到访存阶段MEM模块的信息
 		.mem_wd(mem_wd_i),
 		.mem_wreg(mem_wreg_i),
-		.mem_wdata(mem_wdata_i),
+		.mem_wdata(mem_wdata_i)
 
      	
 	);
@@ -279,7 +279,7 @@ module openmips(
 		//送到MEM/WB模块的信息
 		.wd_o(mem_wd_o),
 		.wreg_o(mem_wreg_o),
-		.wdata_o(mem_wdata_o),
+		.wdata_o(mem_wdata_o)
 	
 	);
 
@@ -298,7 +298,7 @@ module openmips(
 		//送到回写阶段的信息
 		.wb_wd(wb_wd_i),
 		.wb_wreg(wb_wreg_i),
-		.wb_wdata(wb_wdata_i),
+		.wb_wdata(wb_wdata_i)
 	
 									       	
 	);
