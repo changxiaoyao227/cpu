@@ -349,16 +349,14 @@ module id(
 	always @ (*) begin
 		if(rst == `RstEnable) begin
 			reg1_o <= `ZeroWord;		
-		end else if((reg1_read_o == 1'b1) && (ex_wreg_i == 1'b1) 
-								&& (ex_wd_i == reg1_addr_o)) begin
+		end else if((reg1_read_o == 1'b1) && (ex_wreg_i == 1'b1) && (ex_wd_i == reg1_addr_o)) begin
 			reg1_o <= ex_wdata_i; 
-		end else if((reg1_read_o == 1'b1) && (mem_wreg_i == 1'b1) 
-								&& (mem_wd_i == reg1_addr_o)) begin
+		end else if((reg1_read_o == 1'b1) && (mem_wreg_i == 1'b1) && (mem_wd_i == reg1_addr_o)) begin
 			reg1_o <= mem_wdata_i; 			
 	  end else if(reg1_read_o == 1'b1) begin
-	  	reg1_o <= reg1_data_i;
+	  	reg1_o <= reg1_data_i;//regfile读端口1的输出值
 	  end else if(reg1_read_o == 1'b0) begin
-	  	reg1_o <= imm;
+	  	reg1_o <= imm;//立即数
 	  end else begin
 	    reg1_o <= `ZeroWord;
 	  end
@@ -367,16 +365,14 @@ module id(
 	always @ (*) begin
 		if(rst == `RstEnable) begin
 			reg2_o <= `ZeroWord;
-		end else if((reg2_read_o == 1'b1) && (ex_wreg_i == 1'b1) 
-								&& (ex_wd_i == reg2_addr_o)) begin
+		end else if((reg2_read_o == 1'b1) && (ex_wreg_i == 1'b1) && (ex_wd_i == reg2_addr_o)) begin
 			reg2_o <= ex_wdata_i; 
-		end else if((reg2_read_o == 1'b1) && (mem_wreg_i == 1'b1) 
-								&& (mem_wd_i == reg2_addr_o)) begin
+		end else if((reg2_read_o == 1'b1) && (mem_wreg_i == 1'b1) && (mem_wd_i == reg2_addr_o)) begin
 			reg2_o <= mem_wdata_i;			
 	  end else if(reg2_read_o == 1'b1) begin
-	  	reg2_o <= reg2_data_i;
+	  	reg2_o <= reg2_data_i;//regfile读端口2的输出值
 	  end else if(reg2_read_o == 1'b0) begin
-	  	reg2_o <= imm;
+	  	reg2_o <= imm;//立即数
 	  end else begin
 	    reg2_o <= `ZeroWord;
 	  end

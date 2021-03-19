@@ -26,7 +26,7 @@
 // File:    mem.v
 // Author:  Lei Silei
 // E-mail:  leishangwen@163.com
-// Description: �ô�׶�
+// Description: 访存阶段
 // Revision: 1.0
 //////////////////////////////////////////////////////////////////////
 
@@ -34,20 +34,20 @@
 
 module mem(
 
-	input wire										rst,
+	input wire					  rst,//复位信号
 	
-	//����ִ�н׶ε���Ϣ	
-	input wire[`RegAddrBus]       wd_i,
-	input wire                    wreg_i,
-	input wire[`RegBus]					  wdata_i,
+	//来自执行阶段的信息	
+	input wire[`RegAddrBus]       wd_i,//要写入的目的寄存器地址
+	input wire                    wreg_i,//是否有
+	input wire[`RegBus]			  wdata_i,//数据
 	input wire[`RegBus]           hi_i,
 	input wire[`RegBus]           lo_i,
 	input wire                    whilo_i,	
 	
-	//�͵���д�׶ε���Ϣ
-	output reg[`RegAddrBus]      wd_o,
-	output reg                   wreg_o,
-	output reg[`RegBus]					 wdata_o,
+	//送到回写阶段的信息
+	output reg[`RegAddrBus]      wd_o,//最终要写入的目的寄存器地址
+	output reg                   wreg_o,//最终
+	output reg[`RegBus]			 wdata_o,//最终
 	output reg[`RegBus]          hi_o,
 	output reg[`RegBus]          lo_o,
 	output reg                   whilo_o	
@@ -59,12 +59,12 @@ module mem(
 		if(rst == `RstEnable) begin
 			wd_o <= `NOPRegAddr;
 			wreg_o <= `WriteDisable;
-		  wdata_o <= `ZeroWord;
-		  hi_o <= `ZeroWord;
-		  lo_o <= `ZeroWord;
-		  whilo_o <= `WriteDisable;		  
+		  	wdata_o <= `ZeroWord;
+		  	hi_o <= `ZeroWord;
+		  	lo_o <= `ZeroWord;
+		  	whilo_o <= `WriteDisable;		  
 		end else begin
-		  wd_o <= wd_i;
+		  	wd_o <= wd_i;
 			wreg_o <= wreg_i;
 			wdata_o <= wdata_i;
 			hi_o <= hi_i;

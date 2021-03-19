@@ -44,7 +44,7 @@ module pc_reg(
 	input wire                    branch_flag_i,
 	input wire[`RegBus]           branch_target_address_i,
 	
-	output reg[`InstAddrBus]			pc,	//要读取的指令地址 InstAddrBus使指令地址线的宽度
+	output reg[`InstAddrBus]	  pc,	//要读取的指令地址 InstAddrBus使指令地址线的宽度
 	output reg                    ce							//指令存储器使能信号
 	
 );

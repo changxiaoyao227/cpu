@@ -26,7 +26,7 @@
 // File:    inst_rom.v
 // Author:  Lei Silei
 // E-mail:  leishangwen@163.com
-// Description: ָ��洢��
+// Description: 指令存储器
 // Revision: 1.0
 //////////////////////////////////////////////////////////////////////
 
@@ -35,15 +35,15 @@
 module inst_rom(
 
 //	input	wire										clk,
-	input wire										ce,
-	input wire[`InstAddrBus]			addr,
-	output reg[`InstBus]					inst
+	input wire										ce,//使能信号
+	input wire[`InstAddrBus]						addr,//要读取的地址
+	output reg[`InstBus]							inst //取出的指令
 	
 );
 
-	reg[`InstBus]  inst_mem[0:`InstMemNum-1];
+	reg[`InstBus]  inst_mem[0:`InstMemNum-1];//定义一个数组，大小时InstMemNum 元素宽度时InstBus
 
-	initial $readmemh ( "inst_rom.data", inst_mem );
+	initial $readmemh ( "inst_rom.data", inst_mem );//32位宽度的指令 用16进制表示 一位是4 
 
 	always @ (*) begin
 		if (ce == `ChipDisable) begin
